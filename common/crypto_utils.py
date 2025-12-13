@@ -1,8 +1,9 @@
 import hashlib
+import os
 from typing import List, Any
 
-HASH_LEN = 32  # bytes for SHA-256
-
+# SHA-256 output length in bytes
+HASH_LEN = 32
 
 def to_bytes(x: Any) -> bytes:
     """Convert int/str/bytes to bytes in a consistent way."""
@@ -17,6 +18,7 @@ def to_bytes(x: Any) -> bytes:
         return x.to_bytes(length, "big")
     raise TypeError(f"Unsupported type for to_bytes: {type(x)}")
 
+int_to_bytes = to_bytes
 
 def H(*parts: Any) -> bytes:
     """Length-prefixed SHA-256 over a sequence of parts (ints/str/bytes)."""
@@ -28,19 +30,22 @@ def H(*parts: Any) -> bytes:
     return m.digest()
 
 
+def h_int(*parts: Any) -> int:
+    """Helper to return Hash as integer (for modulo operations)."""
+    digest = H(*parts)
+    return int.from_bytes(digest, "big")
+
+
 def xor_bytes(a: bytes, b: bytes) -> bytes:
     if len(a) != len(b):
-        raise ValueError("xor_bytes: length mismatch")
+        raise ValueError(f"xor_bytes: length mismatch {len(a)} vs {len(b)}")
     return bytes(x ^ y for x, y in zip(a, b))
 
 
 def stream_cipher(key: bytes, length: int) -> bytes:
     """
     Very simple stream-like construction:
-
       keystream = H(key, 0) || H(key, 1) || ...
-
-    This is NOT cryptographically strong. It is only for simulation.
     """
     out = b""
     counter = 0
@@ -56,8 +61,8 @@ def enc_sym(key: bytes, plaintext: bytes) -> bytes:
 
 
 def dec_sym(key: bytes, ciphertext: bytes) -> bytes:
-    keystream = stream_cipher(key, len(ciphertext))
-    return xor_bytes(ciphertext, keystream)
+    # Symmetric XOR cipher is valid both ways
+    return enc_sym(key, ciphertext)
 
 
 def pack_fields(*fields: Any) -> bytes:
@@ -85,3 +90,7 @@ def unpack_fields(data: bytes) -> List[bytes]:
         fields.append(data[i:i + length])
         i += length
     return fields
+
+def random_int(bits: int) -> int:
+    """Returns a random integer with the specified number of bits."""
+    return int.from_bytes(os.urandom(bits // 8), byteorder="big")

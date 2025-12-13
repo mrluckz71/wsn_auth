@@ -1,4 +1,6 @@
-from registration import random_int, user_registration_phase, GatewayNode
+from common.crypto_utils import random_int
+from common.models import GatewayNode
+from registration import user_registration_phase
 
 # -----------------------------
 # Example usage / demo
