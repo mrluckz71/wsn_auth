@@ -118,14 +118,19 @@ def gateway_login_processing(gwn: GatewayNode, request: dict) -> Optional[dict]:
     except:
         print("GWN: Failed to unpack D0")
         return None
-        
-    # C* = h(ID'' || dx || r)
+
+    # C* = h(ID'' || dx || r) and must match decrypted Ci''
     if ID_prime_prime not in gwn.user_db:
         print("GWN: User not found in DB")
         return None
     
     user_rec = gwn.user_db[ID_prime_prime]
     Ci_star = h_int(ID_prime_prime, gwn.dx, user_rec.r)
+    if Ci_star != Ci_prime_prime:
+        # Possible honey-list candidate per spec
+        user_rec.honey_list.append(Ci_prime_prime)
+        print("GWN: Ci mismatch. Terminating.")
+        return None
     
     # Retrieve (e'' || a'') = h(r'' || C'') XOR D1
     mask_D1_bytes = H(ri_prime_prime, Ci_prime_prime)
@@ -188,7 +193,9 @@ def gateway_login_processing(gwn: GatewayNode, request: dict) -> Optional[dict]:
              "ri": ri_prime_prime,
              "rn": rn,
              "ei": ei_prime_prime,
-             "Ci": Ci_prime_prime
+             "Ci": Ci_prime_prime,
+             "SID": target_SID,
+             "Pj": key_Pj
         }
     }
 
@@ -261,11 +268,8 @@ def gateway_response_processing(gwn: GatewayNode, gw_state: dict, sensor_resp: d
     rn = gw_state["rn"]
     ei = gw_state["ei"]
     Ci = gw_state["Ci"]
-    
-    # Re-derive Pj for first sensor (Simplification)
-    if not gwn.sensor_db: return None
-    target_SID = list(gwn.sensor_db.keys())[0]
-    Pj = H(target_SID, gwn.dx)
+    target_SID = gw_state["SID"]
+    Pj = gw_state["Pj"]
     
     M3_expected = H(Xj, Pj, rn, ri, ei)
     if M3_expected != M3:
