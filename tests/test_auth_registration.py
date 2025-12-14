@@ -1,10 +1,11 @@
 import unittest
 from common.models import GatewayNode, SmartCard
+from common.test_utils import setup_test_gwn
 from auth_registration.registration import user_registration_phase, gateway_register_user, is_id_available
 
 class TestRegistration(unittest.TestCase):
     def setUp(self):
-        self.gwn = GatewayNode(e=65537, n=12345, dx=67890, n0=256)
+        self.gwn = setup_test_gwn()
         
     def test_user_registration(self):
         ID = "Alice"

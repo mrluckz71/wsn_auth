@@ -16,8 +16,7 @@ Run this script to verify the protocol works as intended.
 
 import sys
 import time
-from common.models import GatewayNode, SensorRecord
-from common.crypto_utils import H
+from common.test_utils import setup_test_gwn
 from auth_registration.registration import user_registration_phase
 from auth_login.login import (
     user_login_request, 
@@ -42,20 +41,12 @@ def delay_print(msg, delay=0.5):
 def main():
     print_header("1. SYSTEM SETUP")
     delay_print("  [.] Initializing Gateway Node keys...")
-    # Initialize GWN with RSA keys 
-    p = (1 << 127) - 1
-    q = (1 << 61) - 1
-    n = p * q
-    e = 65537
-    phi = (p - 1) * (q - 1)
-    dx = pow(e, -1, phi)
-    n0 = 256
-    time.sleep(1)
     
-    gwn = GatewayNode(e=e, n=n, dx=dx, n0=n0)
+    gwn = setup_test_gwn()
+    
     delay_print(f"[+] Gateway Node Initialized.")
-    print(f"    Public Key (e, n): ({e}, {n})")
-    print(f"    Fuzzy Verifier n0: {n0}")
+    print(f"    Public Key (e, n): ({gwn.e}, {gwn.n})")
+    print(f"    Fuzzy Verifier n0: {gwn.n0}")
 
     # ========================================================
     print_header("2. USER REGISTRATION")

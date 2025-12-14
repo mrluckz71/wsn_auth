@@ -10,22 +10,26 @@ from auth_login.login import (
     user_final_verification
 )
 
+from common.test_utils import setup_test_gwn
+from auth_registration.registration import user_registration_phase, gateway_register_user
+from auth_login.login import (
+    user_login_request, 
+    gateway_login_processing, 
+    sensor_login_processing, 
+    gateway_response_processing, 
+    user_final_verification
+)
+
 class TestLoginPhase(unittest.TestCase):
     def setUp(self):
         # 1. Setup System
-        self.e = 65537
-        # Use larger primes for n to ensure n > 2^128 (ri size)
-        # M127 = 2^127 - 1 is prime
-        # M61 = 2^61 - 1 is prime
-        # n = M127 * M61 approx 2^188 > 2^128.
-        p = (1 << 127) - 1
-        q = (1 << 61) - 1
-        self.n = p * q
-        phi = (p - 1) * (q - 1)
-        self.dx = pow(self.e, -1, phi)
+        self.gwn = setup_test_gwn()
         
-        self.n0 = 256
-        self.gwn = GatewayNode(e=self.e, n=self.n, dx=self.dx, n0=self.n0)
+        # Access parameters for tests if needed
+        self.e = self.gwn.e
+        self.n = self.gwn.n
+        self.dx = self.gwn.dx
+        self.n0 = self.gwn.n0
         
         # 2. Register User
         self.ID = "Alice"
