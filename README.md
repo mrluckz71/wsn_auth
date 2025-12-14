@@ -6,6 +6,8 @@ This project implements an efficient user authentication protocol for Wireless S
 
 After downloading the project, navigate to the `wsn_auth_project` directory and run:
 
+> Note: Ensure you are on the `master` branch when running the demos and tests.
+
 ```bash
 # Run the complete demo
 python demo.py
